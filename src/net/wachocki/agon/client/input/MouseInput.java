@@ -45,6 +45,9 @@ public class MouseInput extends Input {
         if (Mouse.getY() >= gameContainer.getHeight() - 1) {
             game.getCamera().setY(game.getCamera().getY() - game.getSettings().getZoomSpeed());
         }
+        if (Mouse.isButtonDown(0)) {
+            minimapView(game, gameContainer);
+        }
     }
 
     public void bind() {
@@ -63,23 +66,34 @@ public class MouseInput extends Input {
             //game.getCamera().setZoom(0.2F);
         }
         if (command == LEFT_CLICK) {
-            int minimapX = gameContainer.getWidth() - game.getSettings().getMinimapSize();
-            int minimapY = gameContainer.getHeight() - game.getSettings().getMinimapSize();
-            if (Mouse.getX() >= minimapX && Mouse.getY() >= minimapY) {
-
-            }
+           minimapView(game, gameContainer);
         }
         if (command == RIGHT_CLICK) {
-            Network.UpdateDestination updateDestination = new Network.UpdateDestination();
-            updateDestination.playerName = game.getPlayer().getName();
-            updateDestination.destination = mousePosition;
-            game.getClient().sendUDP(updateDestination);
+            Network.MoveRequest moveRequest = new Network.MoveRequest();
+            moveRequest.playerName = game.getPlayer().getName();
+            moveRequest.position = mousePosition;
+            game.getClient().sendUDP(moveRequest);
         }
     }
 
     @Override
     public void controlReleased(Command command) {
 
+    }
+
+    public static void minimapView(GameClient game, GameContainer gameContainer) {
+        int minimapX = gameContainer.getWidth() - game.getSettings().getMinimapSize();
+        int minimapY = gameContainer.getHeight() - game.getSettings().getMinimapSize();
+        if (Mouse.getX() >= minimapX && Mouse.getY() >= minimapY) {
+            int mapWidth = game.getMap().getTileWidth() * game.getMap().getWidth();
+            int mapHeight = game.getMap().getTileHeight() * game.getMap().getHeight();
+            int offsetX = Math.min(mapWidth, gameContainer.getWidth()) / 2;
+            int offsetY = Math.min(mapHeight, gameContainer.getHeight()) / 2;
+            float scaleX = (float) game.getSettings().getMinimapSize() / mapWidth;
+            float scaleY = (float) game.getSettings().getMinimapSize() / mapHeight;
+            game.getCamera().setX((int) ((Mouse.getX() - minimapX) / scaleX - offsetX));
+            game.getCamera().setY((int) ((gameContainer.getHeight() - Mouse.getY()) / scaleY - offsetY));
+        }
     }
 
     public static Vector2f getMousePosition(GameClient game, GameContainer gameContainer) {

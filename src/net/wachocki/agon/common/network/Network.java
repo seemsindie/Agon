@@ -2,7 +2,11 @@ package net.wachocki.agon.common.network;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.EndPoint;
+import net.wachocki.agon.common.types.GameState;
+import net.wachocki.agon.common.types.Specialization;
 import org.newdawn.slick.geom.Vector2f;
+
+import java.util.LinkedList;
 
 /**
  * User: Marty
@@ -16,13 +20,25 @@ public class Network {
 
     public static void register(EndPoint endPoint) {
         Kryo kryo = endPoint.getKryo();
+
         kryo.register(LoginRequest.class);
         kryo.register(LoginResponse.class);
-        kryo.register(UpdateDestination.class);
-        kryo.register(Vector2f.class);
+        kryo.register(MoveRequest.class);
+        kryo.register(UpdatePosition.class);
+        kryo.register(UpdateWalkingQueue.class);
+        kryo.register(UpdateGameState.class);
         kryo.register(MapRequest.class);
         kryo.register(MapResponse.class);
         kryo.register(MapChunk.class);
+        kryo.register(AddPlayer.class);
+        kryo.register(RemovePlayer.class);
+        kryo.register(SendMessage.class);
+
+        kryo.register(Specialization.class);
+        kryo.register(GameState.class);
+
+        kryo.register(LinkedList.class);
+        kryo.register(Vector2f.class);
         kryo.register(byte[].class);
     }
 
@@ -35,15 +51,19 @@ public class Network {
         public String message;
     }
 
+    public static class MoveRequest {
+        public String playerName;
+        public Vector2f position;
+    }
 
     public static class UpdatePosition {
         public String playerName;
         public Vector2f position;
     }
 
-    public static class UpdateDestination {
+    public static class UpdateWalkingQueue {
         public String playerName;
-        public Vector2f destination;
+        public LinkedList<Vector2f> walkingQueue;
     }
 
     public static class MapRequest {
@@ -57,5 +77,26 @@ public class Network {
     public static class MapChunk {
         public byte[] bytes;
     }
+
+    public static class UpdateGameState {
+        public String playerName;
+        public GameState gameState;
+    }
+
+    public static class AddPlayer {
+        public String playerName;
+        public Specialization specialization;
+        public Vector2f position;
+    }
+
+    public static class RemovePlayer {
+        public String playerName;
+    }
+
+    public static class SendMessage {
+        public String playerName;
+        public String message;
+    }
+
 
 }

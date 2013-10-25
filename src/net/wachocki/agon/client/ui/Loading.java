@@ -25,7 +25,7 @@ public class Loading {
 
     public void request() {
         Network.MapRequest mapRequest = new Network.MapRequest();
-        mapRequest.playerName = game.getPlayer().getName();
+        mapRequest.playerName = game.getPlayerName();
         game.getClient().sendTCP(mapRequest);
     }
 

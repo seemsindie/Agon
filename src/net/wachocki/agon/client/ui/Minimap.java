@@ -1,7 +1,10 @@
 package net.wachocki.agon.client.ui;
 
 import net.wachocki.agon.client.GameClient;
-import org.newdawn.slick.*;
+import org.newdawn.slick.Color;
+import org.newdawn.slick.GameContainer;
+import org.newdawn.slick.Image;
+import org.newdawn.slick.SlickException;
 import org.newdawn.slick.geom.Rectangle;
 
 /**
@@ -29,11 +32,16 @@ public class Minimap {
     }
 
     public void render() throws SlickException {
+        float xPos = gameContainer.getWidth() - game.getSettings().getMinimapSize();
+        float yPos = 0; //gameContainer.getHeight() - game.getSettings().getMinimapSize();
+
+        gameContainer.getGraphics().setColor(Color.black);
+        gameContainer.getGraphics().fillRect(xPos - 2, yPos, game.getSettings().getMinimapSize() + 2, game.getSettings().getMinimapSize() + 2);
+
         camRect.setWidth(Math.min(mapWidth, gameContainer.getWidth()));
         camRect.setHeight(Math.min(mapHeight, gameContainer.getHeight()));
         gameContainer.getGraphics().pushTransform();
-        float xPos = gameContainer.getWidth() - game.getSettings().getMinimapSize();
-        float yPos = gameContainer.getHeight() - game.getSettings().getMinimapSize();
+
         gameContainer.getGraphics().translate(xPos, yPos);
         if (img != null) {
             img.draw(0, 0, filterColor);
@@ -42,9 +50,8 @@ public class Minimap {
         float scaleX = (float) game.getSettings().getMinimapSize() / this.mapWidth;
         float scaleY = (float) game.getSettings().getMinimapSize() / this.mapHeight;
         gameContainer.getGraphics().scale(scaleX, scaleY);
-
         if (img == null) {
-            game.getMap().render(0, 0, 0);
+            game.getMap().render(0, 0);
             img = new Image(game.getSettings().getMinimapSize(), game.getSettings().getMinimapSize());
             gameContainer.getGraphics().copyArea(img, (int) xPos, (int) yPos);
         }
@@ -52,6 +59,7 @@ public class Minimap {
         gameContainer.getGraphics().draw(camRect);
 
         gameContainer.getGraphics().popTransform();
+
     }
 
 }

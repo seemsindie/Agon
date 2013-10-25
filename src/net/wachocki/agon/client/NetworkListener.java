@@ -1,9 +1,12 @@
 package net.wachocki.agon.client;
 
 import com.esotericsoftware.kryonet.Connection;
+import com.esotericsoftware.kryonet.FrameworkMessage;
 import com.esotericsoftware.kryonet.Listener;
 import net.wachocki.agon.client.entity.Player;
+import net.wachocki.agon.client.ui.Chat;
 import net.wachocki.agon.common.network.Network;
+import net.wachocki.agon.common.types.GameState;
 
 /**
  * User: Marty
@@ -20,16 +23,69 @@ public class NetworkListener extends Listener {
 
 
     @Override
-    public void disconnected(Connection connection) {
+    public void connected(Connection connection) {
+        game.getClient().updateReturnTripTime();
+    }
 
+    @Override
+    public void disconnected(Connection connection) {
+        System.out.println("Connection lost.");
     }
 
     public void received(Connection connection, Object object) {
         if (object instanceof Network.LoginResponse) {
             handleLoginResponse((Network.LoginResponse) object);
-        }
-        if (object instanceof Network.MapResponse) {
+        } else if (object instanceof Network.MapResponse) {
             handleMapResponse((Network.MapResponse) object);
+        } else if (object instanceof Network.UpdateWalkingQueue) {
+            handleUpdateWalkingQueue((Network.UpdateWalkingQueue) object);
+        } else if (object instanceof Network.AddPlayer) {
+            handleAddPlayer((Network.AddPlayer) object);
+        } else if (object instanceof Network.RemovePlayer) {
+            handleRemovePlayer((Network.RemovePlayer) object);
+        } else if (object instanceof FrameworkMessage.Ping) {
+            handlePing(connection, (FrameworkMessage.Ping) object);
+        } else if (object instanceof Network.SendMessage) {
+            handleSendMessage((Network.SendMessage) object);
+        }
+    }
+
+    public void handleSendMessage(Network.SendMessage sendMessage) {
+        Chat.Message message;
+        if (!sendMessage.playerName.equals("SERVER") || !game.getPlayers().containsKey(sendMessage.playerName)) {
+            message = new Chat.Message(sendMessage.playerName, sendMessage.message);
+        } else {
+            message = new Chat.Message(game.getPlayers().get(sendMessage.playerName), sendMessage.message);
+        }
+        game.getChat().newMessage(message);
+    }
+
+    public void handlePing(Connection connection, FrameworkMessage.Ping ping) {
+        if (ping.isReply) {
+            //System.out.println(connection.getReturnTripTime());
+            game.getClient().updateReturnTripTime();
+        }
+    }
+
+    public void handleAddPlayer(Network.AddPlayer addPlayer) {
+        Player player = new Player(addPlayer.playerName);
+        player.setPosition(addPlayer.position);
+        player.setSpecialization(addPlayer.specialization);
+        game.getPlayers().put(addPlayer.playerName, player);
+        if (addPlayer.playerName.equals(game.getPlayerName())) {
+            game.setPlayer(player);
+        }
+    }
+
+    public void handleRemovePlayer(Network.RemovePlayer removePlayer) {
+        if (game.getPlayers().containsKey(removePlayer.playerName)) {
+            game.getPlayers().remove(removePlayer.playerName);
+        }
+    }
+
+    public void handleUpdateWalkingQueue(Network.UpdateWalkingQueue updateWalkingQueue) {
+        if (game.getPlayers().containsKey(updateWalkingQueue.playerName)) {
+            game.getPlayers().get(updateWalkingQueue.playerName).setWalkingQueue(updateWalkingQueue.walkingQueue);
         }
     }
 
@@ -46,12 +102,10 @@ public class NetworkListener extends Listener {
                     System.arraycopy(mapBytes, 0, newBytes, 0, mapBytes.length);
                     System.arraycopy(mapChunk.bytes, 0, newBytes, mapBytes.length, mapChunk.bytes.length);
                     mapBytes = newBytes;
-                    System.out.println();
                     if (mapBytes.length == mapSize) {
                         game.setMapBytes(mapBytes);
-                        game.setGameState(GameClient.GameState.INGAME);
+                        game.setGameState(GameState.INGAME);
                         connection.removeListener(this);
-                        System.out.println("done?");
                     }
                 }
             }
@@ -62,8 +116,12 @@ public class NetworkListener extends Listener {
     public void handleLoginResponse(Network.LoginResponse loginResponse) {
         if (game.getLogin() != null) {
             if (loginResponse.success) {
-                game.setPlayer(new Player("Marty"));
-                game.setGameState(GameClient.GameState.LOADING);
+                game.getLogin().getTextField().setFocus(false);
+                game.setGameState(GameState.LOADING);
+                Network.UpdateGameState updateGameState = new Network.UpdateGameState();
+                updateGameState.playerName = game.getPlayerName();
+                updateGameState.gameState = GameState.LOADING;
+                game.getClient().sendTCP(updateGameState);
                 game.getLoading().request();
             } else {
                 game.getLogin().setErrorMessage(loginResponse.message);

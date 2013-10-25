@@ -3,6 +3,7 @@ package net.wachocki.agon.client.ui;
 import com.esotericsoftware.kryonet.Client;
 import net.wachocki.agon.client.GameClient;
 import net.wachocki.agon.common.network.Network;
+import net.wachocki.agon.common.types.GameState;
 import org.newdawn.slick.Color;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.gui.AbstractComponent;
@@ -34,7 +35,9 @@ public class Login {
         this.textField.addListener(new ComponentListener() {
             @Override
             public void componentActivated(AbstractComponent source) {
-                login();
+                if (game.getGameState() == GameState.LOGIN) {
+                    login();
+                }
             }
         });
 
@@ -67,6 +70,7 @@ public class Login {
                     Network.LoginRequest loginRequest = new Network.LoginRequest();
                     loginRequest.name = name;
                     game.getClient().sendUDP(loginRequest);
+                    game.setPlayerName(loginRequest.name);
                 } else {
                     errorMessage = "Error connecting to server.";
                 }
@@ -81,5 +85,9 @@ public class Login {
 
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
+    }
+
+    public TextField getTextField() {
+        return textField;
     }
 }

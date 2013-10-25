@@ -18,7 +18,6 @@ public abstract class Input implements InputProviderListener {
     public Input(GameClient game, GameContainer gameContainer) {
         this.game = game;
         this.gameContainer = gameContainer;
-        this.bind();
     }
 
     public abstract void poll();

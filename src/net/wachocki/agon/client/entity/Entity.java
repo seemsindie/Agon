@@ -3,6 +3,8 @@ package net.wachocki.agon.client.entity;
 import net.wachocki.agon.client.GameClient;
 import org.newdawn.slick.geom.Vector2f;
 
+import java.util.LinkedList;
+
 /**
  * User: Marty
  * Date: 10/24/13
@@ -12,10 +14,10 @@ public class Entity {
 
     private String name;
     private Vector2f position;
+    private LinkedList<Vector2f> walkingQueue = new LinkedList<Vector2f>();
 
     public Entity(String name) {
         this.name = name;
-        this.position = new Vector2f(100, 100);
     }
 
     public String getName() {
@@ -34,10 +36,18 @@ public class Entity {
         this.position = position;
     }
 
+    public LinkedList<Vector2f> getWalkingQueue() {
+        return walkingQueue;
+    }
+
+    public void setWalkingQueue(LinkedList<Vector2f> walkingQueue) {
+        this.walkingQueue = walkingQueue;
+    }
+
     public void render(GameClient game) {
         if(this instanceof Player) {
             Player player = (Player) this;
-            game.getSpritesSheets().get(player.getSpecialization()).getSprite(0, 0).draw(position.x, position.y);
+            game.getSpritesSheets().get(player.getSpecialization()).getSprite(0, 0).draw(position.getX() - game.getCamera().getX(), position.getY() - game.getCamera().getY());
         }
     }
 

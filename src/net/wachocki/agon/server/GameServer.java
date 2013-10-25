@@ -1,12 +1,11 @@
 package net.wachocki.agon.server;
 
 import com.esotericsoftware.kryonet.Server;
-import net.wachocki.agon.server.entity.Player;
 import net.wachocki.agon.common.network.Network;
+import net.wachocki.agon.server.entity.Player;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  * User: Marty
@@ -16,7 +15,7 @@ import java.util.Map;
 public class GameServer {
 
     private Server server;
-    private Map<String, Player> players;
+    private HashMap<String, Player> players;
 
     public static void main(String[] args) {
         new GameServer().start();
@@ -36,16 +35,26 @@ public class GameServer {
             update();
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
-    public void update() {
+    public void update() throws InterruptedException {
         while (true) {
-
+            for (Player player : players.values()) {
+                for (Player update : players.values()) {
+                    Network.UpdateWalkingQueue updateWalkingQueue = new Network.UpdateWalkingQueue();
+                    updateWalkingQueue.playerName = update.getName();
+                    updateWalkingQueue.walkingQueue = update.getWalkingQueue();
+                    player.getConnection().sendUDP(updateWalkingQueue);
+                }
+            }
+            Thread.sleep(50);
         }
     }
 
-    public Map<String, Player> getPlayers() {
+    public HashMap<String, Player> getPlayers() {
         return players;
     }
 
