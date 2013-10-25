@@ -9,7 +9,7 @@ import net.wachocki.agon.common.types.Specialization;
  * Date: 10/24/13
  * Time: 2:49 AM
  */
-public class Player extends Entity {
+public class Player extends LivingEntity {
 
     private Connection connection;
     private GameState gameState;

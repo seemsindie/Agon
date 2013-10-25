@@ -1,7 +1,7 @@
 package net.wachocki.agon.client.spells;
 
 import net.wachocki.agon.client.camera.Camera;
-import net.wachocki.agon.client.entity.Entity;
+import net.wachocki.agon.client.entity.LivingEntity;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.geom.Vector2f;
 
@@ -14,17 +14,17 @@ public class Projectile {
 
     private Vector2f startPosition;
     private Vector2f position;
-    private Entity entityTarget;
+    private LivingEntity livingEntityTarget;
     private Vector2f positionTarget;
     private Image image;
     private double speed;
     private int maxDistance;
     private int distanceTraveled;
 
-    public Projectile(Vector2f startPosition, Entity entityTarget, Image image, double speed, int maxDistance) {
+    public Projectile(Vector2f startPosition, LivingEntity livingEntityTarget, Image image, double speed, int maxDistance) {
         this.startPosition = startPosition;
         this.position = startPosition;
-        this.entityTarget = entityTarget;
+        this.livingEntityTarget = livingEntityTarget;
         this.image = image;
         this.speed = speed;
         this.maxDistance = maxDistance;
@@ -66,12 +66,12 @@ public class Projectile {
         this.positionTarget = positionTarget;
     }
 
-    public Entity getEntityTarget() {
-        return entityTarget;
+    public LivingEntity getLivingEntityTarget() {
+        return livingEntityTarget;
     }
 
-    public void setEntityTarget(Entity entityTarget) {
-        this.entityTarget = entityTarget;
+    public void setLivingEntityTarget(LivingEntity livingEntityTarget) {
+        this.livingEntityTarget = livingEntityTarget;
     }
 
     public int getMaxDistance() {

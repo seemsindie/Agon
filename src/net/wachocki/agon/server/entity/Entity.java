@@ -2,18 +2,15 @@ package net.wachocki.agon.server.entity;
 
 import org.newdawn.slick.geom.Vector2f;
 
-import java.util.LinkedList;
-
 /**
  * User: Marty
- * Date: 10/24/13
- * Time: 2:49 AM
+ * Date: 10/25/13
+ * Time: 12:16 PM
  */
 public class Entity {
 
     private String name;
     private Vector2f position;
-    private LinkedList<Vector2f> walkingQueue = new LinkedList<Vector2f>();
 
     public Entity(String name) {
         this.name = name;
@@ -35,7 +32,4 @@ public class Entity {
         this.position = position;
     }
 
-    public LinkedList<Vector2f> getWalkingQueue() {
-        return walkingQueue;
-    }
 }

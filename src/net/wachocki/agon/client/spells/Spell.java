@@ -1,7 +1,7 @@
 package net.wachocki.agon.client.spells;
 
 import net.wachocki.agon.client.GameClient;
-import net.wachocki.agon.client.entity.Entity;
+import net.wachocki.agon.client.entity.LivingEntity;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Image;
 
@@ -92,7 +92,7 @@ public class Spell {
         this.level = level;
     }
 
-    public void cast(GameClient game, GameContainer gameContainer, Entity target) {
+    public void cast(GameClient game, GameContainer gameContainer, LivingEntity target) {
         if(stopMovement) {
             //game.getPlayer().getWalkingQueue().clear();
         }
