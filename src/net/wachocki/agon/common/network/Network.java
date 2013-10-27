@@ -23,9 +23,7 @@ public class Network {
 
         kryo.register(LoginRequest.class);
         kryo.register(LoginResponse.class);
-        kryo.register(MoveRequest.class);
         kryo.register(UpdatePosition.class);
-        kryo.register(UpdateWalkingQueue.class);
         kryo.register(UpdateGameState.class);
         kryo.register(MapRequest.class);
         kryo.register(MapResponse.class);
@@ -51,19 +49,10 @@ public class Network {
         public String message;
     }
 
-    public static class MoveRequest {
-        public String playerName;
-        public Vector2f position;
-    }
-
     public static class UpdatePosition {
         public String playerName;
         public Vector2f position;
-    }
-
-    public static class UpdateWalkingQueue {
-        public String playerName;
-        public LinkedList<Vector2f> walkingQueue;
+        public Vector2f destination;
     }
 
     public static class MapRequest {

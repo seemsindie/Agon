@@ -22,4 +22,5 @@ public class Player extends LivingEntity {
     public void setSpecialization(Specialization specialization) {
         this.specialization = specialization;
     }
+
 }

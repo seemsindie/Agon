@@ -71,6 +71,7 @@ public class Chat {
 
     public void render() {
         if (textFieldVisible) {
+            gameContainer.getGraphics().setColor(Color.white);
             textField.render(gameContainer, gameContainer.getGraphics());
         }
         if (System.currentTimeMillis() - lastUpdated < game.getSettings().getChatIdleLimit()) {

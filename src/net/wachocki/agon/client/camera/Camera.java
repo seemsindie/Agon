@@ -1,7 +1,9 @@
 package net.wachocki.agon.client.camera;
 
+import net.wachocki.agon.client.GameClient;
 import net.wachocki.agon.client.entity.Entity;
 import org.newdawn.slick.GameContainer;
+import org.newdawn.slick.geom.Vector2f;
 
 /**
  * User: Marty
@@ -10,9 +12,16 @@ import org.newdawn.slick.GameContainer;
  */
 public class Camera {
 
+    private GameClient game;
+    private GameContainer gameContainer;
     private int x = 0;
     private int y = 0;
     private float zoom = 1F;
+
+    public Camera(GameClient game, GameContainer gameContainer) {
+        this.game = game;
+        this.gameContainer = gameContainer;
+    }
 
     public int getX() {
         return x;
@@ -38,9 +47,18 @@ public class Camera {
         this.zoom = zoom;
     }
 
-    public void centerOn(Entity entity, GameContainer gameContainer) {
-        x = (int) entity.getPosition().getX() - (gameContainer.getWidth() / 2);
-        y = (int) entity.getPosition().getY() - (gameContainer.getHeight() / 2);
+    public void centerOn(Entity entity) {
+        Vector2f position = worldToScreen(entity.getPosition());
+        x = (int) position.getX() - (gameContainer.getWidth() / 2);
+        y = (int) position.getY() - (gameContainer.getHeight() / 2);
+    }
+
+    public Vector2f worldToScreen(Vector2f position) {
+        return new Vector2f(position.getX() * game.getTileMap().getTileWidth(), position.getY() * game.getTileMap().getTileHeight());
+    }
+
+    public Vector2f screenToWorld(Vector2f position) {
+        return new Vector2f(position.getX() / game.getTileMap().getTileWidth(), position.getY() / game.getTileMap().getTileHeight());
     }
 
 }

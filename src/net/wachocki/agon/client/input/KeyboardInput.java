@@ -23,8 +23,10 @@ public class KeyboardInput extends Input {
     private static Command SPELL_F = new BasicCommand("spell_f");
 
     private static Command CENTER_PLAYER = new BasicCommand("center_player");
+    private static Command OPEN_MAP = new BasicCommand("open_map");
     private static Command ENTER = new BasicCommand("enter");
     private static Command EXPAND_CHAT = new BasicCommand("expand_chat");
+    private static Command DISPLAY_NAMES = new BasicCommand("display_names");
 
     public KeyboardInput(GameClient game, GameContainer gameContainer) {
         super(game, gameContainer);
@@ -32,16 +34,16 @@ public class KeyboardInput extends Input {
 
     public void poll() {
         if (Keyboard.isKeyDown(Keyboard.KEY_LEFT)) {
-            game.getCamera().setX(game.getCamera().getX() - game.getSettings().getZoomSpeed());
+            game.getCamera().setX(game.getCamera().getX() - game.getSettings().getScrollSpeed());
         }
         if (Keyboard.isKeyDown(Keyboard.KEY_RIGHT)) {
-            game.getCamera().setX(game.getCamera().getX() + game.getSettings().getZoomSpeed());
+            game.getCamera().setX(game.getCamera().getX() + game.getSettings().getScrollSpeed());
         }
         if (Keyboard.isKeyDown(Keyboard.KEY_DOWN)) {
-            game.getCamera().setY(game.getCamera().getY() + game.getSettings().getZoomSpeed());
+            game.getCamera().setY(game.getCamera().getY() + game.getSettings().getScrollSpeed());
         }
         if (Keyboard.isKeyDown(Keyboard.KEY_UP)) {
-            game.getCamera().setY(game.getCamera().getY() - game.getSettings().getZoomSpeed());
+            game.getCamera().setY(game.getCamera().getY() - game.getSettings().getScrollSpeed());
         }
     }
 
@@ -57,8 +59,10 @@ public class KeyboardInput extends Input {
         provider.bindCommand(new KeyControl(Keyboard.KEY_F), SPELL_F);
 
         provider.bindCommand(new KeyControl(Keyboard.KEY_F1), CENTER_PLAYER);
+        provider.bindCommand(new KeyControl(Keyboard.KEY_M), OPEN_MAP);
         provider.bindCommand(new KeyControl(Keyboard.KEY_RETURN), ENTER);
         provider.bindCommand(new KeyControl(Keyboard.KEY_Z), EXPAND_CHAT);
+        provider.bindCommand(new KeyControl(Keyboard.KEY_LMENU), DISPLAY_NAMES);
 
     }
 
@@ -66,12 +70,14 @@ public class KeyboardInput extends Input {
     public void controlPressed(Command command) {
         if (command == ENTER) {
             game.getChat().toggleTextField();
-        }
-        if (command == CENTER_PLAYER) {
-            game.getCamera().centerOn(game.getPlayer(), gameContainer);
-        }
-        if (command == EXPAND_CHAT) {
+        } else if (command == CENTER_PLAYER) {
+            game.getCamera().centerOn(game.getPlayer());
+        } else if (command == OPEN_MAP) {
+            game.getGameMap().toggle();
+        } else if (command == EXPAND_CHAT) {
             game.getSettings().setMaxChatMessages(game.getSettings().getMaxChatMessages() * 2);
+        } else if (command == DISPLAY_NAMES) {
+            game.setDisplayNames(true);
         }
     }
 
@@ -79,6 +85,8 @@ public class KeyboardInput extends Input {
     public void controlReleased(Command command) {
         if (command == EXPAND_CHAT) {
             game.getSettings().setMaxChatMessages(game.getSettings().getMaxChatMessages() / 2);
+        } else {
+            game.setDisplayNames(false);
         }
     }
 

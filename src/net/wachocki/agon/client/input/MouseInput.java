@@ -1,7 +1,6 @@
 package net.wachocki.agon.client.input;
 
 import net.wachocki.agon.client.GameClient;
-import net.wachocki.agon.common.network.Network;
 import org.lwjgl.input.Mouse;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.command.BasicCommand;
@@ -9,6 +8,8 @@ import org.newdawn.slick.command.Command;
 import org.newdawn.slick.command.InputProvider;
 import org.newdawn.slick.command.MouseButtonControl;
 import org.newdawn.slick.geom.Vector2f;
+import org.newdawn.slick.util.pathfinding.AStarPathFinder;
+import org.newdawn.slick.util.pathfinding.Path;
 
 /**
  * User: Marty
@@ -34,16 +35,16 @@ public class MouseInput extends Input {
             }
         }
         if (Mouse.getX() <= 0) {
-            game.getCamera().setX(game.getCamera().getX() - game.getSettings().getZoomSpeed());
+            game.getCamera().setX(game.getCamera().getX() - game.getSettings().getScrollSpeed());
         }
         if (Mouse.getX() >= gameContainer.getWidth() - 1) {
-            game.getCamera().setX(game.getCamera().getX() + game.getSettings().getZoomSpeed());
+            game.getCamera().setX(game.getCamera().getX() + game.getSettings().getScrollSpeed());
         }
         if (Mouse.getY() <= 0) {
-            game.getCamera().setY(game.getCamera().getY() + game.getSettings().getZoomSpeed());
+            game.getCamera().setY(game.getCamera().getY() + game.getSettings().getScrollSpeed());
         }
         if (Mouse.getY() >= gameContainer.getHeight() - 1) {
-            game.getCamera().setY(game.getCamera().getY() - game.getSettings().getZoomSpeed());
+            game.getCamera().setY(game.getCamera().getY() - game.getSettings().getScrollSpeed());
         }
         if (Mouse.isButtonDown(0)) {
             minimapView(game, gameContainer);
@@ -61,18 +62,25 @@ public class MouseInput extends Input {
 
     @Override
     public void controlPressed(Command command) {
-        Vector2f mousePosition = getMousePosition(game, gameContainer);
+        Vector2f mousePositionWorld = getMousePositionWorld(game, gameContainer);
         if (command == MIDDLE_MOUSE_CLICK) {
             //game.getCamera().setZoom(0.2F);
         }
         if (command == LEFT_CLICK) {
-           minimapView(game, gameContainer);
+            minimapView(game, gameContainer);
         }
         if (command == RIGHT_CLICK) {
-            Network.MoveRequest moveRequest = new Network.MoveRequest();
-            moveRequest.playerName = game.getPlayer().getName();
-            moveRequest.position = mousePosition;
-            game.getClient().sendUDP(moveRequest);
+            game.getWalkingQueue().clear();
+            AStarPathFinder pathFinder = new AStarPathFinder(game.getCollisionMap(), 500, true);
+            Path path = pathFinder.findPath(null, (int) game.getPlayer().getPosition().getX(), (int) game.getPlayer().getPosition().getY(), (int) mousePositionWorld.getX(),
+                    (int) mousePositionWorld.getY());
+            if (path != null) {
+                int length = path.getLength();
+                for (int i = 0; i < length; i++) {
+                    game.getWalkingQueue().add(new Vector2f(path.getX(i), path.getY(i)));
+                }
+                game.getWalkingQueue().set(game.getWalkingQueue().size() - 1, new Vector2f(mousePositionWorld.getX(), mousePositionWorld.getY()));
+            }
         }
     }
 
@@ -85,8 +93,8 @@ public class MouseInput extends Input {
         int minimapX = gameContainer.getWidth() - game.getSettings().getMinimapSize();
         int minimapY = gameContainer.getHeight() - game.getSettings().getMinimapSize();
         if (Mouse.getX() >= minimapX && Mouse.getY() >= minimapY) {
-            int mapWidth = game.getMap().getTileWidth() * game.getMap().getWidth();
-            int mapHeight = game.getMap().getTileHeight() * game.getMap().getHeight();
+            int mapWidth = game.getTileMap().getTileWidth() * game.getTileMap().getWidth();
+            int mapHeight = game.getTileMap().getTileHeight() * game.getTileMap().getHeight();
             int offsetX = Math.min(mapWidth, gameContainer.getWidth()) / 2;
             int offsetY = Math.min(mapHeight, gameContainer.getHeight()) / 2;
             float scaleX = (float) game.getSettings().getMinimapSize() / mapWidth;
@@ -96,8 +104,8 @@ public class MouseInput extends Input {
         }
     }
 
-    public static Vector2f getMousePosition(GameClient game, GameContainer gameContainer) {
-        return new Vector2f(game.getCamera().getX() + Mouse.getX(), game.getCamera().getY() + (gameContainer.getHeight() - Mouse.getY()));
+    public static Vector2f getMousePositionWorld(GameClient game, GameContainer gameContainer) {
+        return game.getCamera().screenToWorld(new Vector2f(game.getCamera().getX() + Mouse.getX(), game.getCamera().getY() + (gameContainer.getHeight() - Mouse.getY())));
     }
 
 }

@@ -17,11 +17,14 @@ public class GameServer {
     private Server server;
     private HashMap<String, Player> players;
 
+
     public static void main(String[] args) {
         new GameServer().start();
     }
 
     public GameServer() {
+        //new MapGenerator().writeTMX("resources/random.tmx", 300, 300);
+
         server = new Server();
         players = new HashMap<String, Player>();
     }
@@ -44,10 +47,13 @@ public class GameServer {
         while (true) {
             for (Player player : players.values()) {
                 for (Player update : players.values()) {
-                    Network.UpdateWalkingQueue updateWalkingQueue = new Network.UpdateWalkingQueue();
-                    updateWalkingQueue.playerName = update.getName();
-                    updateWalkingQueue.walkingQueue = update.getWalkingQueue();
-                    player.getConnection().sendUDP(updateWalkingQueue);
+                    if (player != update) {
+                        Network.UpdatePosition updatePosition = new Network.UpdatePosition();
+                        updatePosition.playerName = update.getName();
+                        updatePosition.position = update.getPosition();
+                        updatePosition.destination = update.getDestination();
+                        player.getConnection().sendUDP(updatePosition);
+                    }
                 }
             }
             Thread.sleep(50);

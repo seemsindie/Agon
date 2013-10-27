@@ -23,8 +23,8 @@ public class Minimap {
     private Color filterColor;
 
     public Minimap(GameClient game, GameContainer gameContainer) {
-        this.mapWidth = game.getMap().getTileWidth() * game.getMap().getWidth();
-        this.mapHeight = game.getMap().getTileHeight() * game.getMap().getHeight();
+        this.mapWidth = game.getTileMap().getTileWidth() * game.getTileMap().getWidth();
+        this.mapHeight = game.getTileMap().getTileHeight() * game.getTileMap().getHeight();
         this.camRect = new Rectangle(0, 0, 0, 0);
         this.filterColor = new Color(1, 1, 1, 1f);
         this.game = game;
@@ -51,7 +51,7 @@ public class Minimap {
         float scaleY = (float) game.getSettings().getMinimapSize() / this.mapHeight;
         gameContainer.getGraphics().scale(scaleX, scaleY);
         if (img == null) {
-            game.getMap().render(0, 0);
+            game.getTileMap().render(0, 0);
             img = new Image(game.getSettings().getMinimapSize(), game.getSettings().getMinimapSize());
             gameContainer.getGraphics().copyArea(img, (int) xPos, (int) yPos);
         }

@@ -11,28 +11,19 @@ import java.util.LinkedList;
  */
 public class LivingEntity extends Entity {
 
-    private String name;
-    private Vector2f position;
+    private Vector2f destination;
     private LinkedList<Vector2f> walkingQueue = new LinkedList<Vector2f>();
 
     public LivingEntity(String name) {
         super(name);
     }
 
-    public String getName() {
-        return name;
+    public Vector2f getDestination() {
+        return destination;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Vector2f getPosition() {
-        return position;
-    }
-
-    public void setPosition(Vector2f position) {
-        this.position = position;
+    public void setDestination(Vector2f destination) {
+        this.destination = destination;
     }
 
     public LinkedList<Vector2f> getWalkingQueue() {

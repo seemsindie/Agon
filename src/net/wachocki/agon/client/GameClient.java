@@ -5,8 +5,10 @@ import net.wachocki.agon.client.camera.Camera;
 import net.wachocki.agon.client.entity.Player;
 import net.wachocki.agon.client.input.KeyboardInput;
 import net.wachocki.agon.client.input.MouseInput;
+import net.wachocki.agon.client.items.Inventory;
 import net.wachocki.agon.client.spells.Spell;
 import net.wachocki.agon.client.ui.*;
+import net.wachocki.agon.client.world.CollisionMap;
 import net.wachocki.agon.common.network.Network;
 import net.wachocki.agon.common.types.GameState;
 import net.wachocki.agon.common.types.Specialization;
@@ -17,6 +19,7 @@ import org.newdawn.slick.tiled.TiledMap;
 
 import java.io.ByteArrayInputStream;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 
 /**
@@ -32,7 +35,7 @@ public class GameClient implements Game {
     private Loading loading;
     private Camera camera;
     private byte[] mapBytes;
-    private TiledMap map;
+    private TiledMap tileMap;
     private Client client;
     private GameState gameState = GameState.LOGIN;
     private Player player;
@@ -44,9 +47,14 @@ public class GameClient implements Game {
     private HashMap<String, Player> players;
     private Map<Specialization, SpriteSheet> spritesSheets;
     private ActionBar actionBar;
-    private boolean gameInitialized = false;
+    private boolean gameInitialized;
     private String playerName;
     private Chat chat;
+    private GameMap gameMap;
+    private CollisionMap collisionMap;
+    private boolean displayNames;
+    private Inventory inventory;
+    private LinkedList<Vector2f> walkingQueue = new LinkedList<Vector2f>();
 
     public static void main(String[] args) {
         try {
@@ -75,24 +83,27 @@ public class GameClient implements Game {
             gameContainer.setMouseCursor("resources/cursor.png", 0, 0);
             players = new HashMap<String, Player>();
         } else if (gameState == GameState.INGAME) {
-            chat = new Chat(this, gameContainer);
-            actionBar = new ActionBar(new Image("resources/actionbar.png"), new Spell[0]);
-            map = new TiledMap(new ByteArrayInputStream(mapBytes));
-            camera = new Camera();
-            camera.centerOn(player, gameContainer);
-            keyboard = new KeyboardInput(this, gameContainer);
-            keyboard.bind();
-            mouse = new MouseInput(this, gameContainer);
-            mouse.bind();
-            minimap = new Minimap(this, gameContainer);
             spritesSheets = new HashMap<Specialization, SpriteSheet>();
             spritesSheets.put(Specialization.ARCHER, new SpriteSheet("resources/archer_sprites.png", 34, 46, 3));
+            actionBar = new ActionBar(new Image("resources/actionbar.png"), new Spell[0]);
+            tileMap = new TiledMap(new ByteArrayInputStream(mapBytes));
+            collisionMap = new CollisionMap(this);
+            chat = new Chat(this, gameContainer);
+            gameMap = new GameMap(this, gameContainer);
+            minimap = new Minimap(this, gameContainer);
+            camera = new Camera(this, gameContainer);
+            inventory = new Inventory(this, gameContainer);
+            keyboard = new KeyboardInput(this, gameContainer);
+            mouse = new MouseInput(this, gameContainer);
+            keyboard.bind();
+            mouse.bind();
+            camera.centerOn(player);
             players.put(player.getName(), player);
+
             Network.UpdateGameState updateGameState = new Network.UpdateGameState();
             updateGameState.playerName = player.getName();
             updateGameState.gameState = GameState.INGAME;
             client.sendTCP(updateGameState);
-            settings.setChatFont(new TrueTypeFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 12), true));
             gameInitialized = true;
         }
     }
@@ -106,22 +117,7 @@ public class GameClient implements Game {
             keyboard.poll();
             mouse.poll();
             for (Player player : players.values()) {
-                if (!player.getWalkingQueue().isEmpty()) {
-                    if(player.getWalkingQueue().getFirst().distance(player.getPosition()) < 1) {
-                        Network.UpdatePosition updatePosition = new Network.UpdatePosition();
-                        updatePosition.playerName = player.getName();
-                        updatePosition.position = player.getPosition();
-                        client.sendUDP(updatePosition);
-                        player.getWalkingQueue().pop();
-                        continue;
-                    }
-                    Vector2f direction = new Vector2f(player.getWalkingQueue().getFirst().getX() - player.getPosition().getX(),
-                            player.getWalkingQueue().getFirst().getY() - player.getPosition().getY());
-                    float speed = 0.15f * delta;
-                    double x = player.getPosition().getX() + (speed * Math.cos(Math.toRadians(direction.getTheta())));
-                    double y = player.getPosition().getY() + (speed * Math.sin(Math.toRadians(direction.getTheta())));
-                    player.setPosition(new Vector2f((float) x, (float) y));
-                }
+                player.walk(this, delta);
             }
         }
     }
@@ -133,17 +129,28 @@ public class GameClient implements Game {
         } else if (gameState == GameState.LOADING) {
             loading.render();
         } else if (gameState == GameState.INGAME && gameInitialized) {
-            map.render(-camera.getX(), -camera.getY());
+            if (gameMap.isVisible()) {
+                gameMap.render();
+                return;
+            }
+            tileMap.render(-camera.getX(), -camera.getY());
             for (Player player : players.values()) {
-                player.render(this);
+                player.render(this, gameContainer);
             }
             actionBar.render(gameContainer);
             minimap.render();
             chat.render();
             graphics.setColor(Color.white);
+            if (!getWalkingQueue().isEmpty()) {
+                for (Vector2f w : getWalkingQueue()) {
+                    Vector2f s = camera.worldToScreen(new Vector2f(w.x, w.y));
+                    graphics.fillOval(s.getX() - camera.getX(), s.getY() - camera.getY(), 4, 4);
+                }
+            }
             graphics.drawString("Mouse: (" + Mouse.getX() + ", " + Mouse.getY() + ")", 10, 30);
             graphics.drawString("Camera: (" + camera.getX() + ", " + camera.getY() + ")", 10, 50);
             graphics.drawString("Player: (" + player.getPosition().getX() + ", " + player.getPosition().getY() + ")", 10, 70);
+            graphics.drawString("Tile: " + tileMap.getTileId((int) player.getPosition().getX(), (int) player.getPosition().getY(), 1), 10, 90);
         }
     }
 
@@ -155,6 +162,10 @@ public class GameClient implements Game {
     @Override
     public String getTitle() {
         return "Agon";
+    }
+
+    public GameMap getGameMap() {
+        return gameMap;
     }
 
     public Chat getChat() {
@@ -171,6 +182,10 @@ public class GameClient implements Game {
 
     public void setNetworkListener(NetworkListener networkListener) {
         this.networkListener = networkListener;
+    }
+
+    public CollisionMap getCollisionMap() {
+        return collisionMap;
     }
 
     public Login getLogin() {
@@ -217,6 +232,14 @@ public class GameClient implements Game {
         this.client = client;
     }
 
+    public boolean isDisplayNames() {
+        return displayNames;
+    }
+
+    public void setDisplayNames(boolean displayNames) {
+        this.displayNames = displayNames;
+    }
+
     public String getPlayerName() {
         return playerName;
     }
@@ -225,12 +248,12 @@ public class GameClient implements Game {
         this.playerName = playerName;
     }
 
-    public TiledMap getMap() {
-        return map;
+    public TiledMap getTileMap() {
+        return tileMap;
     }
 
-    public void setMap(TiledMap map) {
-        this.map = map;
+    public void setTileMap(TiledMap tileMap) {
+        this.tileMap = tileMap;
     }
 
     public Camera getCamera() {
@@ -251,5 +274,13 @@ public class GameClient implements Game {
 
     public void setMapBytes(byte[] mapBytes) {
         this.mapBytes = mapBytes;
+    }
+
+    public LinkedList<Vector2f> getWalkingQueue() {
+        return walkingQueue;
+    }
+
+    public void setWalkingQueue(LinkedList<Vector2f> walkingQueue) {
+        this.walkingQueue = walkingQueue;
     }
 }

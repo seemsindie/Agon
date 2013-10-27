@@ -51,9 +51,6 @@ public class NetworkListener extends Listener {
         if (object instanceof Network.LoginRequest) {
             handleLoginRequest(connection, (Network.LoginRequest) object);
         }
-        if (object instanceof Network.MoveRequest) {
-            handleMoveRequest(connection, (Network.MoveRequest) object);
-        }
         if (object instanceof Network.MapRequest) {
             try {
                 handleMapRequest(connection, (Network.MapRequest) object);
@@ -90,9 +87,8 @@ public class NetworkListener extends Listener {
         if (gameServer.getPlayers().containsKey(updatePosition.playerName)) {
             Player player = gameServer.getPlayers().get(updatePosition.playerName);
             if (player.getConnection() == connection) {
-                if (!player.getWalkingQueue().isEmpty() && updatePosition.position.distance(player.getWalkingQueue().getFirst()) < 1) {
-                    player.getWalkingQueue().pop();
-                }
+                player.setPosition(updatePosition.position);
+                player.setDestination(updatePosition.destination);
             }
         }
     }
@@ -132,16 +128,6 @@ public class NetworkListener extends Listener {
         }
     }
 
-    public void handleMoveRequest(Connection connection, Network.MoveRequest updateDestination) {
-        if (gameServer.getPlayers().containsKey(updateDestination.playerName)) {
-            Player player = gameServer.getPlayers().get(updateDestination.playerName);
-            if (player.getConnection() == connection) {
-                player.getWalkingQueue().clear();
-                player.getWalkingQueue().add(updateDestination.position);
-            }
-        }
-    }
-
     public void handleLoginRequest(Connection connection, Network.LoginRequest loginRequest) {
         System.out.println(loginRequest.name + " @ " + connection.getRemoteAddressUDP().getHostString() + " connected.");
         Network.LoginResponse loginResponse = new Network.LoginResponse();
@@ -166,7 +152,7 @@ public class NetworkListener extends Listener {
         if (!error) {
             player = new Player(loginRequest.name, connection);
             player.setSpecialization(Specialization.ARCHER);
-            player.setPosition(new Vector2f(4700, 5000));
+            player.setPosition(new Vector2f(150, 150));
             synchronized (gameServer.getPlayers()) {
                 gameServer.getPlayers().put(player.getName(), player);
             }

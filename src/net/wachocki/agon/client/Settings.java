@@ -3,6 +3,7 @@ package net.wachocki.agon.client;
 import org.newdawn.slick.AppGameContainer;
 import org.newdawn.slick.Font;
 import org.newdawn.slick.GameContainer;
+import org.newdawn.slick.TrueTypeFont;
 
 /**
  * User: Marty
@@ -11,7 +12,7 @@ import org.newdawn.slick.GameContainer;
  */
 public class Settings {
 
-    private int zoomSpeed = 15;
+    private int scrollSpeed = 15;
 
     private int minimapSize = 175;
 
@@ -29,23 +30,24 @@ public class Settings {
     public void check(GameContainer gameContainer, AppGameContainer app) {
         if (!gameContainer.hasFocus() && app.getTargetFrameRate() != minimizedFPS) {
             app.setTargetFrameRate(getMinimizedFPS());
-        } else if(gameContainer.hasFocus() && app.getTargetFrameRate() != normalFPS) {
+        } else if (gameContainer.hasFocus() && app.getTargetFrameRate() != normalFPS) {
             app.setTargetFrameRate(getNormalFPS());
         }
-        if(vsync != gameContainer.isVSyncRequested()) {
+        if (vsync != gameContainer.isVSyncRequested()) {
             gameContainer.setVSync(isVSync());
         }
-        if(mouseGrabbed != gameContainer.isMouseGrabbed()) {
+        if (mouseGrabbed != gameContainer.isMouseGrabbed()) {
             gameContainer.setMouseGrabbed(mouseGrabbed);
         }
+        setChatFont(new TrueTypeFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 12), true));
     }
 
-    public int getZoomSpeed() {
-        return zoomSpeed;
+    public int getScrollSpeed() {
+        return scrollSpeed;
     }
 
-    public void setZoomSpeed(int zoomSpeed) {
-        this.zoomSpeed = zoomSpeed;
+    public void setScrollSpeed(int scrollSpeed) {
+        this.scrollSpeed = scrollSpeed;
     }
 
     public int getMinimapSize() {

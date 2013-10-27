@@ -37,8 +37,6 @@ public class NetworkListener extends Listener {
             handleLoginResponse((Network.LoginResponse) object);
         } else if (object instanceof Network.MapResponse) {
             handleMapResponse((Network.MapResponse) object);
-        } else if (object instanceof Network.UpdateWalkingQueue) {
-            handleUpdateWalkingQueue((Network.UpdateWalkingQueue) object);
         } else if (object instanceof Network.AddPlayer) {
             handleAddPlayer((Network.AddPlayer) object);
         } else if (object instanceof Network.RemovePlayer) {
@@ -47,6 +45,8 @@ public class NetworkListener extends Listener {
             handlePing(connection, (FrameworkMessage.Ping) object);
         } else if (object instanceof Network.SendMessage) {
             handleSendMessage((Network.SendMessage) object);
+        } else if (object instanceof Network.UpdatePosition) {
+            handleUpdatePosition((Network.UpdatePosition) object);
         }
     }
 
@@ -71,6 +71,7 @@ public class NetworkListener extends Listener {
         Player player = new Player(addPlayer.playerName);
         player.setPosition(addPlayer.position);
         player.setSpecialization(addPlayer.specialization);
+        player.setHealth(player.getMaxHealth());
         game.getPlayers().put(addPlayer.playerName, player);
         if (addPlayer.playerName.equals(game.getPlayerName())) {
             game.setPlayer(player);
@@ -83,9 +84,9 @@ public class NetworkListener extends Listener {
         }
     }
 
-    public void handleUpdateWalkingQueue(Network.UpdateWalkingQueue updateWalkingQueue) {
-        if (game.getPlayers().containsKey(updateWalkingQueue.playerName)) {
-            game.getPlayers().get(updateWalkingQueue.playerName).setWalkingQueue(updateWalkingQueue.walkingQueue);
+    public void handleUpdatePosition(Network.UpdatePosition updatePosition) {
+        if (game.getPlayers().containsKey(updatePosition.playerName)) {
+            game.getPlayers().get(updatePosition.playerName).setDestination(updatePosition.destination);
         }
     }
 
