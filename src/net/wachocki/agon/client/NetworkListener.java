@@ -4,9 +4,12 @@ import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.FrameworkMessage;
 import com.esotericsoftware.kryonet.Listener;
 import net.wachocki.agon.client.entity.Player;
+import net.wachocki.agon.client.entity.GroundItem;
+import net.wachocki.agon.client.items.Item;
 import net.wachocki.agon.client.ui.Chat;
 import net.wachocki.agon.common.network.Network;
 import net.wachocki.agon.common.types.GameState;
+import org.newdawn.slick.SlickException;
 
 /**
  * User: Marty
@@ -47,6 +50,38 @@ public class NetworkListener extends Listener {
             handleSendMessage((Network.SendMessage) object);
         } else if (object instanceof Network.UpdatePosition) {
             handleUpdatePosition((Network.UpdatePosition) object);
+        } else if (object instanceof Network.UpdateGroundItem) {
+            handleUpdateGroundItem((Network.UpdateGroundItem) object);
+        } else if (object instanceof Network.RemoveGroundItem) {
+            handleRemoveGroundItem((Network.RemoveGroundItem) object);
+        } else if (object instanceof Network.UpdateInventory) {
+            handleUpdateInventory((Network.UpdateInventory) object);
+        } else if (object instanceof Network.MapChunk) {
+            // ignore
+        } else {
+            System.out.println("Unknown object: " + object.toString());
+        }
+    }
+
+    public void handleRemoveGroundItem(Network.RemoveGroundItem groundItem) {
+        if(game.getGroundItems().containsKey(groundItem.groundId)) {
+            game.getGroundItems().remove(groundItem.groundId);
+        }
+    }
+
+    public void handleUpdateGroundItem(Network.UpdateGroundItem groundItem) {
+        try {
+            if (!game.getGroundItems().containsKey(groundItem.groundId) || game.getGroundItems().get(groundItem.groundId).getItem().getItemId() != groundItem.itemId || game.getGroundItems().get(groundItem.groundId).getItem().getAmount() != groundItem.itemAmount) {
+                game.getGroundItems().put(groundItem.groundId, new GroundItem(groundItem.groundId, new Item(groundItem.itemId, groundItem.itemAmount), groundItem.position));
+            }
+        } catch (SlickException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void handleUpdateInventory(Network.UpdateInventory inventory) {
+        for (int i = 0; i < inventory.slots.length; i++) {
+            game.getInventory().setItem(inventory.slots[i], new Item(inventory.itemIds[i], inventory.itemAmounts[i]));
         }
     }
 

@@ -1,10 +1,10 @@
 package org.newdawn.slick;
 
-import java.io.Serializable;
-import java.nio.FloatBuffer;
-
 import org.newdawn.slick.opengl.renderer.Renderer;
 import org.newdawn.slick.opengl.renderer.SGL;
+
+import java.io.Serializable;
+import java.nio.FloatBuffer;
 
 /**
  * A simple wrapper round the values required for a colour
@@ -46,7 +46,13 @@ public class Color implements Serializable {
     public final static Color orange 	= new Color(255, 200, 0, 255);
 	/** The fixed colour dark magenta */
     public final static Color magenta	= new Color(255, 0, 255, 255);
-    
+    /** The fixed colour purple */
+    public final static Color purple    = new Color(148, 0, 211, 255);
+    /** The fixed colour brown */
+    public final static Color brown     = new Color(139, 69, 19);
+    /** The fixed colour brown */
+    public final static Color lightBrown     = new Color(179, 96, 32);
+
 	/** The red component of the colour */
 	public float r;
 	/** The green component of the colour */

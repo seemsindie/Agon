@@ -1,15 +1,17 @@
 package net.wachocki.agon.client.input;
 
 import net.wachocki.agon.client.GameClient;
+import net.wachocki.agon.client.entity.GroundItem;
+import net.wachocki.agon.client.interfaces.Interactable;
+import net.wachocki.agon.client.ui.ContextMenu;
 import org.lwjgl.input.Mouse;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.command.BasicCommand;
 import org.newdawn.slick.command.Command;
 import org.newdawn.slick.command.InputProvider;
 import org.newdawn.slick.command.MouseButtonControl;
+import org.newdawn.slick.geom.Rectangle;
 import org.newdawn.slick.geom.Vector2f;
-import org.newdawn.slick.util.pathfinding.AStarPathFinder;
-import org.newdawn.slick.util.pathfinding.Path;
 
 /**
  * User: Marty
@@ -49,6 +51,18 @@ public class MouseInput extends Input {
         if (Mouse.isButtonDown(0)) {
             minimapView(game, gameContainer);
         }
+        ContextMenu contextMenu = game.getContextMenu();
+        if (contextMenu != null) {
+            Vector2f mousePositionScreen = new Vector2f(Mouse.getX(), (gameContainer.getHeight() - Mouse.getY()));
+            if (!contextMenu.getBounds().contains(mousePositionScreen.getX(), mousePositionScreen.getY())) {
+                game.setContextMenu(null);
+            } else {
+                float optionHeight = contextMenu.getHeight() / contextMenu.getActions().length;
+                float relativeY = mousePositionScreen.getY() - contextMenu.getPosition().getY();
+                contextMenu.setSelectedIndex((int) (relativeY / optionHeight));
+            }
+        }
+
     }
 
     public void bind() {
@@ -62,25 +76,37 @@ public class MouseInput extends Input {
 
     @Override
     public void controlPressed(Command command) {
+        Vector2f mousePositionScreen = new Vector2f(Mouse.getX(), (gameContainer.getHeight() - Mouse.getY()));
         Vector2f mousePositionWorld = getMousePositionWorld(game, gameContainer);
         if (command == MIDDLE_MOUSE_CLICK) {
             //game.getCamera().setZoom(0.2F);
         }
         if (command == LEFT_CLICK) {
             minimapView(game, gameContainer);
+
+            ContextMenu contextMenu = game.getContextMenu();
+            if (contextMenu != null) {
+                if (contextMenu.getBounds().contains(mousePositionScreen.getX(), mousePositionScreen.getY())) {
+                    contextMenu.performAction(contextMenu.getSelectedIndex());
+                    game.setContextMenu(null);
+                }
+            } else {
+                for (GroundItem groundItem : game.getGroundItems().values()) {
+                    if (groundItem instanceof Interactable) {
+                        Rectangle bounds = groundItem.getScreenBounds(game);
+                        if (bounds != null && bounds.contains(mousePositionScreen.getX(), mousePositionScreen.getY())) {
+                            contextMenu = new ContextMenu(game, gameContainer, new Vector2f(mousePositionScreen.getX() - 2, mousePositionScreen.getY() - 2), groundItem,
+                                    groundItem.getActions());
+                            game.setContextMenu(contextMenu);
+                            break;
+                        }
+                    }
+                }
+            }
+
         }
         if (command == RIGHT_CLICK) {
-            game.getWalkingQueue().clear();
-            AStarPathFinder pathFinder = new AStarPathFinder(game.getCollisionMap(), 500, true);
-            Path path = pathFinder.findPath(null, (int) game.getPlayer().getPosition().getX(), (int) game.getPlayer().getPosition().getY(), (int) mousePositionWorld.getX(),
-                    (int) mousePositionWorld.getY());
-            if (path != null) {
-                int length = path.getLength();
-                for (int i = 0; i < length; i++) {
-                    game.getWalkingQueue().add(new Vector2f(path.getX(i), path.getY(i)));
-                }
-                game.getWalkingQueue().set(game.getWalkingQueue().size() - 1, new Vector2f(mousePositionWorld.getX(), mousePositionWorld.getY()));
-            }
+            game.getPlayer().requestWalk(game, mousePositionWorld);
         }
     }
 

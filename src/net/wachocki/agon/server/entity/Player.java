@@ -3,6 +3,7 @@ package net.wachocki.agon.server.entity;
 import com.esotericsoftware.kryonet.Connection;
 import net.wachocki.agon.common.types.GameState;
 import net.wachocki.agon.common.types.Specialization;
+import net.wachocki.agon.server.items.Inventory;
 
 /**
  * User: Marty
@@ -14,10 +15,12 @@ public class Player extends LivingEntity {
     private Connection connection;
     private GameState gameState;
     private Specialization specialization;
+    private Inventory inventory;
 
     public Player(String name, Connection connection) {
         super(name);
         this.connection = connection;
+        this.inventory = new Inventory();
     }
 
     public Connection getConnection() {
@@ -42,5 +45,13 @@ public class Player extends LivingEntity {
 
     public void setSpecialization(Specialization specialization) {
         this.specialization = specialization;
+    }
+
+    public Inventory getInventory() {
+        return inventory;
+    }
+
+    public void setInventory(Inventory inventory) {
+        this.inventory = inventory;
     }
 }

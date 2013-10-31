@@ -64,7 +64,7 @@ public class GameMap {
         float mapPlayerHeight = 6 / scaleY;
         gameContainer.getGraphics().setColor(Color.red);
         Vector2f playerPosition = game.getCamera().worldToScreen(game.getPlayer().getPosition());
-        gameContainer.getGraphics().fillOval(playerPosition.getX() - (mapPlayerWidth / 2), playerPosition.getY() - (mapPlayerHeight / 2), mapPlayerWidth,  mapPlayerHeight);
+        gameContainer.getGraphics().fillOval(playerPosition.getX() + game.getCamera().getX() - (mapPlayerWidth / 2), playerPosition.getY() + game.getCamera().getY() - (mapPlayerHeight / 2), mapPlayerWidth,  mapPlayerHeight);
         gameContainer.getGraphics().popTransform();
 
     }

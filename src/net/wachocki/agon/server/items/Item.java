@@ -7,20 +7,20 @@ package net.wachocki.agon.server.items;
  */
 public class Item {
 
-    private int id;
+    private int itemId;
     private int amount;
 
-    public Item(int id, int amount) {
-        this.id = id;
+    public Item(int itemId, int amount) {
+        this.itemId = itemId;
         this.amount = amount;
     }
 
-    public int getId() {
-        return id;
+    public int getItemId() {
+        return itemId;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setItemId(int itemId) {
+        this.itemId = itemId;
     }
 
     public int getAmount() {

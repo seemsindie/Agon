@@ -2,6 +2,7 @@ package net.wachocki.agon.common.network;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.EndPoint;
+import net.wachocki.agon.common.types.EntityType;
 import net.wachocki.agon.common.types.GameState;
 import net.wachocki.agon.common.types.Specialization;
 import org.newdawn.slick.geom.Vector2f;
@@ -31,13 +32,19 @@ public class Network {
         kryo.register(AddPlayer.class);
         kryo.register(RemovePlayer.class);
         kryo.register(SendMessage.class);
+        kryo.register(UpdateGroundItem.class);
+        kryo.register(RemoveGroundItem.class);
+        kryo.register(DropItem.class);
+        kryo.register(UpdateInventory.class);
 
         kryo.register(Specialization.class);
         kryo.register(GameState.class);
+        kryo.register(EntityType.class);
 
         kryo.register(LinkedList.class);
         kryo.register(Vector2f.class);
         kryo.register(byte[].class);
+        kryo.register(int[].class);
     }
 
     public static class LoginRequest {
@@ -53,6 +60,9 @@ public class Network {
         public String playerName;
         public Vector2f position;
         public Vector2f destination;
+        public EntityType entityTargetType;
+        public int entityTargetId;
+        public int entityTargetAction;
     }
 
     public static class MapRequest {
@@ -85,6 +95,29 @@ public class Network {
     public static class SendMessage {
         public String playerName;
         public String message;
+    }
+
+    public static class UpdateInventory {
+        public int[] slots;
+        public int[] itemIds;
+        public int[] itemAmounts;
+    }
+
+    public static class DropItem {
+        public String playerName;
+        public int inventoryIndex;
+    }
+
+    public static class UpdateGroundItem {
+        public int groundId;
+        public int itemId;
+        public int itemAmount;
+        public Vector2f position;
+    }
+
+    public static class RemoveGroundItem {
+        public String playerName;
+        public int groundId;
     }
 
 

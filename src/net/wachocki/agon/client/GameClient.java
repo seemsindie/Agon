@@ -2,10 +2,13 @@ package net.wachocki.agon.client;
 
 import com.esotericsoftware.kryonet.Client;
 import net.wachocki.agon.client.camera.Camera;
+import net.wachocki.agon.client.entity.Entity;
+import net.wachocki.agon.client.entity.GroundItem;
 import net.wachocki.agon.client.entity.Player;
 import net.wachocki.agon.client.input.KeyboardInput;
 import net.wachocki.agon.client.input.MouseInput;
 import net.wachocki.agon.client.items.Inventory;
+import net.wachocki.agon.client.items.ItemDefinition;
 import net.wachocki.agon.client.spells.Spell;
 import net.wachocki.agon.client.ui.*;
 import net.wachocki.agon.client.world.CollisionMap;
@@ -45,6 +48,7 @@ public class GameClient implements Game {
     private Minimap minimap;
     private NetworkListener networkListener;
     private HashMap<String, Player> players;
+    private HashMap<Integer, GroundItem> groundItems;
     private Map<Specialization, SpriteSheet> spritesSheets;
     private ActionBar actionBar;
     private boolean gameInitialized;
@@ -54,7 +58,11 @@ public class GameClient implements Game {
     private CollisionMap collisionMap;
     private boolean displayNames;
     private Inventory inventory;
+    private boolean debugMode = true;
+    private ContextMenu contextMenu;
     private LinkedList<Vector2f> walkingQueue = new LinkedList<Vector2f>();
+    private Entity targetEntity;
+    private int targetEntityActionIndex;
 
     public static void main(String[] args) {
         try {
@@ -74,6 +82,7 @@ public class GameClient implements Game {
     public void init(GameContainer gameContainer) throws SlickException {
         gameContainer.setUpdateOnlyWhenVisible(false);
         gameContainer.setAlwaysRender(true);
+        gameContainer.setShowFPS(false);
         if (gameState == GameState.LOGIN) {
             networkListener = new NetworkListener(this);
             login = new Login(this, gameContainer);
@@ -83,7 +92,9 @@ public class GameClient implements Game {
             gameContainer.setMouseCursor("resources/cursor.png", 0, 0);
             players = new HashMap<String, Player>();
         } else if (gameState == GameState.INGAME) {
+            ItemDefinition.load("resources/items.xml");
             spritesSheets = new HashMap<Specialization, SpriteSheet>();
+            groundItems = new HashMap<Integer, GroundItem>();
             spritesSheets.put(Specialization.ARCHER, new SpriteSheet("resources/archer_sprites.png", 34, 46, 3));
             actionBar = new ActionBar(new Image("resources/actionbar.png"), new Spell[0]);
             tileMap = new TiledMap(new ByteArrayInputStream(mapBytes));
@@ -92,14 +103,13 @@ public class GameClient implements Game {
             gameMap = new GameMap(this, gameContainer);
             minimap = new Minimap(this, gameContainer);
             camera = new Camera(this, gameContainer);
-            inventory = new Inventory(this, gameContainer);
+            inventory = new Inventory(new Image("resources/inventory.png"), this, gameContainer);
             keyboard = new KeyboardInput(this, gameContainer);
             mouse = new MouseInput(this, gameContainer);
             keyboard.bind();
             mouse.bind();
             camera.centerOn(player);
             players.put(player.getName(), player);
-
             Network.UpdateGameState updateGameState = new Network.UpdateGameState();
             updateGameState.playerName = player.getName();
             updateGameState.gameState = GameState.INGAME;
@@ -118,6 +128,9 @@ public class GameClient implements Game {
             mouse.poll();
             for (Player player : players.values()) {
                 player.walk(this, delta);
+                if (player.getImage() == null) {
+                    player.setImage(getSpritesSheets().get(player.getSpecialization()).getSprite(0, 0));
+                }
             }
         }
     }
@@ -134,23 +147,35 @@ public class GameClient implements Game {
                 return;
             }
             tileMap.render(-camera.getX(), -camera.getY());
+            for (GroundItem groundItem : groundItems.values()) {
+                groundItem.render(this, gameContainer);
+            }
             for (Player player : players.values()) {
                 player.render(this, gameContainer);
             }
             actionBar.render(gameContainer);
             minimap.render();
             chat.render();
-            graphics.setColor(Color.white);
-            if (!getWalkingQueue().isEmpty()) {
-                for (Vector2f w : getWalkingQueue()) {
-                    Vector2f s = camera.worldToScreen(new Vector2f(w.x, w.y));
-                    graphics.fillOval(s.getX() - camera.getX(), s.getY() - camera.getY(), 4, 4);
-                }
+            if (inventory.isVisible()) {
+                inventory.render(this, gameContainer);
             }
-            graphics.drawString("Mouse: (" + Mouse.getX() + ", " + Mouse.getY() + ")", 10, 30);
-            graphics.drawString("Camera: (" + camera.getX() + ", " + camera.getY() + ")", 10, 50);
-            graphics.drawString("Player: (" + player.getPosition().getX() + ", " + player.getPosition().getY() + ")", 10, 70);
-            graphics.drawString("Tile: " + tileMap.getTileId((int) player.getPosition().getX(), (int) player.getPosition().getY(), 1), 10, 90);
+            if (contextMenu != null) {
+                contextMenu.render();
+            }
+            if (debugMode) {
+                graphics.setColor(Color.white);
+                if (!getWalkingQueue().isEmpty()) {
+                    for (Vector2f w : getWalkingQueue()) {
+                        Vector2f s = camera.worldToScreen(new Vector2f(w.x, w.y));
+                        graphics.fillOval(s.getX(), s.getY(), 4, 4);
+                    }
+                }
+                graphics.drawString("FPS: " + gameContainer.getFPS(), 10, 10);
+                graphics.drawString("Mouse: (" + Mouse.getX() + ", " + Mouse.getY() + ")", 10, 30);
+                graphics.drawString("Camera: (" + camera.getX() + ", " + camera.getY() + ")", 10, 50);
+                graphics.drawString("Player: (" + player.getPosition().getX() + ", " + player.getPosition().getY() + ")", 10, 70);
+                graphics.drawString("Tile: " + tileMap.getTileId((int) player.getPosition().getX(), (int) player.getPosition().getY(), 1), 10, 90);
+            }
         }
     }
 
@@ -162,6 +187,30 @@ public class GameClient implements Game {
     @Override
     public String getTitle() {
         return "Agon";
+    }
+
+    public Entity getTargetEntity() {
+        return targetEntity;
+    }
+
+    public void setTargetEntity(Entity targetEntity) {
+        this.targetEntity = targetEntity;
+    }
+
+    public int getTargetEntityActionIndex() {
+        return targetEntityActionIndex;
+    }
+
+    public void setTargetEntityActionIndex(int targetEntityActionIndex) {
+        this.targetEntityActionIndex = targetEntityActionIndex;
+    }
+
+    public ContextMenu getContextMenu() {
+        return contextMenu;
+    }
+
+    public void setContextMenu(ContextMenu contextMenu) {
+        this.contextMenu = contextMenu;
     }
 
     public GameMap getGameMap() {
@@ -188,6 +237,10 @@ public class GameClient implements Game {
         return collisionMap;
     }
 
+    public void toggleDebugMode() {
+        debugMode = !debugMode;
+    }
+
     public Login getLogin() {
         return login;
     }
@@ -198,6 +251,14 @@ public class GameClient implements Game {
 
     public HashMap<String, Player> getPlayers() {
         return players;
+    }
+
+    public HashMap<Integer, GroundItem> getGroundItems() {
+        return groundItems;
+    }
+
+    public Inventory getInventory() {
+        return inventory;
     }
 
     public Settings getSettings() {

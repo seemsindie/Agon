@@ -14,6 +14,8 @@ public class Entity {
     private int maxHealth = 100;
     private int health;
     private long lastHit;
+    private Entity targetEntity;
+    private int targetEntityAction;
 
     public Entity(String name) {
         this.name = name;
@@ -33,6 +35,22 @@ public class Entity {
 
     public void setPosition(Vector2f position) {
         this.position = position;
+    }
+
+    public Entity getTargetEntity() {
+        return targetEntity;
+    }
+
+    public void setTargetEntity(Entity targetEntity) {
+        this.targetEntity = targetEntity;
+    }
+
+    public int getTargetEntityAction() {
+        return targetEntityAction;
+    }
+
+    public void setTargetEntityAction(int targetEntityAction) {
+        this.targetEntityAction = targetEntityAction;
     }
 
     public int getMaxHealth() {

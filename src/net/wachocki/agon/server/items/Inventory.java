@@ -1,5 +1,8 @@
 package net.wachocki.agon.server.items;
 
+import net.wachocki.agon.common.network.Network;
+import net.wachocki.agon.server.entity.Player;
+
 /**
  * User: Marty
  * Date: 10/27/13
@@ -43,14 +46,50 @@ public class Inventory {
         this.inventorySize = inventorySize;
     }
 
+    public int addItem(Item item) {
+        int slot = getFirstFreeSlot();
+        if (slot != -1) {
+            setItem(slot, item);
+            return slot;
+        }
+        return -1;
+    }
+
+    public int getFirstFreeSlot() {
+        for (int i = 0; i < items.length; i++) {
+            if (items[i] == null) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     public int getFreeSlots() {
         int free = 0;
-        for(Item item : items) {
-            if(item == null) {
+        for (Item item : items) {
+            if (item == null) {
                 free++;
             }
         }
         return free;
+    }
+
+    public boolean isFull() {
+        return getFreeSlots() == 0;
+    }
+
+    public void sendUpdate(Player player, int[] slots) {
+        int[] itemIds = new int[slots.length];
+        int[] itemAmounts = new int[slots.length];
+        for (int i = 0; i < itemIds.length; i++) {
+            itemIds[i] = items[slots[i]].getItemId();
+            itemAmounts[i] = items[slots[i]].getAmount();
+        }
+        Network.UpdateInventory updateInventory = new Network.UpdateInventory();
+        updateInventory.itemIds = itemIds;
+        updateInventory.itemAmounts = itemAmounts;
+        updateInventory.slots = slots;
+        player.getConnection().sendTCP(updateInventory);
     }
 
 }

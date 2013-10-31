@@ -27,6 +27,8 @@ public class KeyboardInput extends Input {
     private static Command ENTER = new BasicCommand("enter");
     private static Command EXPAND_CHAT = new BasicCommand("expand_chat");
     private static Command DISPLAY_NAMES = new BasicCommand("display_names");
+    private static Command DEBUG_MODE = new BasicCommand("debug_mode");
+    private static Command INVENTORY = new BasicCommand("inventory");
 
     public KeyboardInput(GameClient game, GameContainer gameContainer) {
         super(game, gameContainer);
@@ -63,6 +65,8 @@ public class KeyboardInput extends Input {
         provider.bindCommand(new KeyControl(Keyboard.KEY_RETURN), ENTER);
         provider.bindCommand(new KeyControl(Keyboard.KEY_Z), EXPAND_CHAT);
         provider.bindCommand(new KeyControl(Keyboard.KEY_LMENU), DISPLAY_NAMES);
+        provider.bindCommand(new KeyControl(Keyboard.KEY_F9), DEBUG_MODE);
+        provider.bindCommand(new KeyControl(Keyboard.KEY_B), INVENTORY);
 
     }
 
@@ -78,6 +82,10 @@ public class KeyboardInput extends Input {
             game.getSettings().setMaxChatMessages(game.getSettings().getMaxChatMessages() * 2);
         } else if (command == DISPLAY_NAMES) {
             game.setDisplayNames(true);
+        } else if (command == DEBUG_MODE) {
+            game.toggleDebugMode();
+        } else if (command == INVENTORY) {
+            game.getInventory().toggle();
         }
     }
 
